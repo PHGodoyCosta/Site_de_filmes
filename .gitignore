@@ -21,3 +21,12 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+filme/
+token.key
+OneDriveController.php
+audios/
+audios_hls/
+audios_hls2/
+legenda/
+movie/
+movie2/
