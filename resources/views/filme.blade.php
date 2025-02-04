@@ -7,27 +7,107 @@
     <title>{{ $filme->name }}</title>
 
     @env("local")
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite(['resources/css/app.css', 'resources/css/filme.css', 'resources/js/filme.js', 'resources/js/bootstrap.js'])
     @endenv
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
-    <link href="https://vjs.zencdn.net/7.15.4/video-js.css" rel="stylesheet" />
-    <script src="https://vjs.zencdn.net/7.15.4/video.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-playlist/5.0.0/videojs-playlist.min.js"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
-
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
     <h1 class="mt-2 text-center">Assita agora: {{ $filme->name }}</h1>
-    <video id="videoPlayer" controls>
-        <track default kind="captions" src="/legenda/legenda.vtt" />
-    </video>
-    <audio id="audioPlayer" controls></audio>
+    <div class="d-flex w-100 justify-content-center mb-2 mt-2" style="position: relative">
+        <div id="video-box">
+            <div id="all-controls">
+                <div class="w-100 position-absolute pt-2 px-2 d-flex justify-content-between align-items-center" style="z-index: 3">
+                    <a href="/" id="back">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div class="gap-3" id="dropdowns" style="display: flex">
+                        <div class="dropdown">
+                            <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                @if ($filme->audios[0]->name)
+                                    {{ $filme->audios[0]->name }}
+                                @else
+                                    Áudio {{ 0 }}
+                                @endif
+                            </button>
+                            <ul class="dropdown-menu" id="dropdown-audios" style="z-index: 3">
+                                @for ($i=0;$i<count($filme->audios);$i++)
+                                    @php $audio = $filme->audios[$i]; @endphp
+                                    @if ($audio->name)
+                                        <li><a class="dropdown-item" href="#">{{ $audio->name }}</a></li>
+                                    @else
+                                        <li><a class="dropdown-item" href="#">Áudio {{ $i }}</a></li>
+                                    @endif
+                                @endfor
+                            </ul>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Legenda</button>
+                            <ul class="dropdown-menu" id="dropdown-legendas">
+                              <li><a class="dropdown-item" href="#">Action</a></li>
+                              <li><a class="dropdown-item" href="#">Another action</a></li>
+                              <li><a class="dropdown-item" href="#">Something else here</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="controls">
+                    <div class="pause_icon" style="cursor: pointer">
+                        <i style="display: none" class="bi bi-play-fill"></i>
+                        <div class="flex-column align-items-center" style="z-index: 1" id="waiting">
+                            <img style="border-radius: 10px;width: 30vw" src="/loading.gif" alt="Loading do vídeo">
+                            <p style="color: white" class="text-center fw-bold fs-2">Carregando...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-100 position-absolute d-flex align-items-center gap-3 px-2" style="bottom: 0">
+                    <div id="little_pause">
+                        <i class="bi bi-play-fill"></i>
+                    </div>
+                    <div id="progress-container" class="flex-grow-1">
+                        <div id="progress-bar"></div>
+                        <div id="progress-buffer"></div>
+                    </div>
+                    <p class="mb-1" style="color: white;" id="remaining-time">00:00</p>
+                    <div id="fullscreen">
+                        <i class="bi bi-fullscreen"></i>
+                    </div>
+                </div>
+            </div>
+            <video id="videoPlayer" src="/green-day.mp4" muted>
+                {{-- <track default kind="captions" src="/legenda/legenda.vtt" /> --}}
+            </video>
+        </div>
+    </div>
+    <div>
+        <audio id="audioPlayer" src="/green-day.mp3" controls></audio>
+    </div>
+    <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Idioma</button>
+        <ul class="dropdown-menu" style="z-index: 3">
+          <li><a class="dropdown-item" href="#">Action</a></li>
+          <li><a class="dropdown-item" href="#">Another action</a></li>
+          <li><a class="dropdown-item" href="#">Something else here</a></li>
+        </ul>
+    </div>
     <button id="playButton">Play</button>
     <p id="duration">asdasdasd</p>
     <p id="tempo-pulado">tempo pulado</p>
+
+    <script>
+        const dropdownAudios = document.getElementById("dropdown-audios")
+        const dropdownLegendas = document.getElementById("dropdown-legendas")
+
+        for (let i=0;i<dropdownAudios.children.length;i++) {
+            let item = dropdownAudios.children[i]
+
+            item.addEventListener("click", e => {
+                dropdownAudios.parentElement.children[0].innerHTML = item.textContent
+            })
+        }
+    </script>
 
     <script>
         const videoPlayer = document.getElementById('videoPlayer');
@@ -57,71 +137,6 @@
         // Fallback para navegadores que suportam HLS nativamente (Safari)
             audioPlayer.src = audioUrl;
         }
-    </script>
-    <script>
-        const playButton = document.getElementById('playButton')
-        const durationP = document.getElementById("duration")
-        const tempoPulado = document.getElementById("tempo-pulado")
-
-        let currentIndex = 0
-
-        var videoDuration = 0;
-
-        function formatTime(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = Math.floor(seconds % 60);
-            return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
-        }
-
-        function isBuffered(mediaElement, time) {
-            for (let i=0;i<mediaElement.buffered.length;i++) {
-                if (time >= mediaElement.buffered.start(i) && time <= mediaElement.buffered.end(i)) {
-                    return true
-                }
-            }
-
-            return false
-        }
-
-        videoPlayer.addEventListener('loadedmetadata', () => {
-            let duration = videoPlayer.duration; // Duração total em segundos
-            videoDuration = formatTime(duration); // Formata a duração total
-            durationP.innerHTML = `Tempo total: ${videoDuration}`;
-        });
-
-        videoPlayer.addEventListener('seeked', async () => {
-            const currentTime = videoPlayer.currentTime;
-            audioPlayer.currentTime = currentTime
-
-            videoPlayer.pause();
-            audioPlayer.pause();
-
-            while (!isBuffered(videoPlayer, currentTime) || !isBuffered(audioPlayer, currentTime)) {
-                console.log("Esperando Juntar Vídeo/Audio!")
-                await new Promise(resolve => setTimeout(resolve, 100))
-            }
-
-            videoPlayer.play();
-            audioPlayer.play();
-
-            const formattedTime = formatTime(currentTime);
-            const formattedDuration = formatTime(videoPlayer.duration);
-            tempoPulado.innerHTML = `Tempo atual: ${formattedTime}`;
-        });
-
-        videoPlayer.addEventListener('play', () => {
-            audioPlayer.play()
-        })
-
-        videoPlayer.addEventListener('pause', () => {
-            audioPlayer.pause()
-        })
-
-        playButton.addEventListener("click", e => {
-            videoPlayer.play()
-            let buffer = isBuffered(videoPlayer)
-            console.log(buffer)
-        })
     </script>
 </body>
 </html>
