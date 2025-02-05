@@ -6,9 +6,30 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>{{ $filme->name }}</title>
 
-    @env("local")
-        @vite(['resources/css/app.css', 'resources/css/filme.css', 'resources/js/filme.js', 'resources/js/bootstrap.js'])
+    @env('local')
+        @vite(['resources/css/app.css', 'resources/css/filme.css', 'resources/js/app.js', 'resources/js/filme.js'])
+    @else
+        <link rel="stylesheet" href="{{ asset('/build/assets/app.css') }}">
+        <link rel="stylesheet" href="{{ asset('/build/assets/filme.css') }}">
+        <script src="{{ asset('/build/assets/app2.js') }}"></script>
+        <script src="{{ asset('/build/assets/filme2.js') }}"></script>
     @endenv
+
+    {{-- @env("local")
+        @vite(['resources/css/app.css', 'resources/css/filme.css', 'resources/js/filme.js', 'resources/js/app.js'])
+    @endenv
+
+    @production
+        <link rel="stylesheet" href="/build/assets/app-DQux0av7.css">
+        <link rel="stylesheet" href="/build/assets/filme-CQqhzZ2_.css">
+        <script src="/build/assets/app-Xaw6OIO1.js"></script>
+        <script src="/build/assets/filme-CSITiNQE.js"></script>
+    @endproduction --}}
+
+    {{-- <link rel="stylesheet" href="/build/assets/app.css">
+    <link rel="stylesheet" href="/build/assets/filme.css">
+    <script src="/build/assets/app2.js"></script>
+    <script src="/build/assets/filme2.js"></script> --}}
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
@@ -19,7 +40,7 @@
     <div id="video-box">
         <div id="all-controls">
             <div class="w-100 position-absolute pt-2 px-3 d-flex justify-content-between align-items-center" style="z-index: 3">
-                <a href="/" id="back">
+                <a href="{{ $backUrl }}" id="back">
                     <i class="bi bi-arrow-left"></i>
                 </a>
                 <div class="gap-3" id="dropdowns" style="display: flex">
@@ -139,7 +160,6 @@
     </script>
 
     <script>
-        const audioPlayer = document.getElementById('audioPlayer');
         //const audioUrl = '/audios_hls2/output.m3u8'; // URL da playlist HLS
 
         function hls_audio(audioUrl) {

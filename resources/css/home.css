@@ -1,0 +1,10 @@
+.card-filme {
+    width: 13rem;
+}
+
+
+@media only screen and (max-width: 550px) {
+    .card-filme {
+        width: 10rem;
+    }
+}

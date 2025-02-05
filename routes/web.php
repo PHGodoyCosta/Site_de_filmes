@@ -14,12 +14,22 @@ Route::get('/', function () {
     return view("home", ["filmes" => $filme]);
 });
 
-Route::get("/filme", FilmeController::class);
+Route::get('/mf', function () {
+    $filme = Filmes::all();
+
+    return view("mf", ["filmes" => $filme]);
+});
+
+Route::get("/mf/filme/{filme}", function (string $filmeHash) {
+    $filme = Filmes::where("hash", $filmeHash)->firstOrFail();
+
+    return view("filme", ["filme" => $filme, "backUrl" => "/mf"]);
+});
 
 Route::get("/filme/{filme}", function (string $filmeHash) {
     $filme = Filmes::where("hash", $filmeHash)->firstOrFail();
 
-    return view("filme", ["filme" => $filme]);
+    return view("filme", ["filme" => $filme, "backUrl" => "/"]);
 });
 
 Route::get("/api/{filme}/video/hls", function (string $filmeHash) {
