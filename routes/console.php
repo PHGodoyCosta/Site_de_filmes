@@ -10,6 +10,12 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+Artisan::command("legenda", function() {
+    $filme = Filmes::where("hash", "57f328fc-1142-44a2-a866-0b481d869b52")->firstOrFail();
+
+    var_dump($filme->legendas[0]);
+});
+
 Artisan::command('test', function() {
     $filme = Filmes::where("hash", "9d308500-9d3a-42f6-b2c9-b8d8c96a7055")->firstOrFail();
     $one_drive = new OneDriveController();

@@ -5,9 +5,13 @@ use App\Models\Filmes;
 use App\Http\Controllers\FilmeController;
 use App\Http\Controllers\OneDriveController;
 use App\Models\Audios;
+use App\Models\Legendas;
+use Illuminate\Http\Response;
 
 Route::get('/', function () {
-    return view('home');
+    $filme = Filmes::all();
+
+    return view("home", ["filmes" => $filme]);
 });
 
 Route::get("/filme", FilmeController::class);
@@ -41,6 +45,24 @@ Route::get("/api/{filme}/video/hls", function (string $filmeHash) {
     header("Content-Type: application/vnd.apple.mpegurl");
 
     echo $hlsContent;
+});
+
+Route::get("/api/{legenda}/legenda", function (string $legendaHash) {
+    $legenda = Legendas::where("hash", $legendaHash)->firstOrFail();
+
+    $one_drive = new OneDriveController();
+
+    $legenda_content = $one_drive->downloadFile($legenda->file_id);
+
+    //header("Content-Type: text/vtt; charset=UTF-8");
+
+    //echo $legenda_content;
+    return new Response($legenda_content, 200, [
+        'Content-Type' => 'text/vtt; charset=UTF-8',
+    ]);
+    //http://127.0.0.1:8000/api/547f253e-9a84-41cb-abc9-5d6056bbb478/legenda
+    //api/57f328fc-1142-44a2-a866-0b481d869b52/video/hls
+
 });
 
 Route::get("/api/{audio}/audio/hls", function (string $audioHash) {

@@ -12,6 +12,7 @@ const waiting = document.getElementById("waiting")
 const dropdowns = document.getElementById("dropdowns")
 const dropdownAudios = document.getElementById("dropdown-audios")
 const dropdownLegendas = document.getElementById("dropdown-legendas")
+const progressTimeCounter = document.getElementById("progress-time-counter")
 
 let currentIndex = 0
 let hideTimeout;
@@ -145,6 +146,7 @@ videoPlayer.addEventListener("timeupdate", () => {
 
     // Atualizar o tempo restante
     const remainingTimeNumber = videoPlayer.duration - videoPlayer.currentTime;
+    progressTimeCounter.innerHTML = formatTime(Math.floor(videoPlayer.currentTime))
     remainingTime.innerHTML = formatTime(Math.floor(remainingTimeNumber));
 });
 
@@ -207,6 +209,7 @@ document.getElementById('fullscreen').addEventListener('click', function () {
 });
 
 window.addEventListener("load", e => {
+    videoPlayer.textTracks[0].mode = "showing"
     let isWaitingForCanPlay = false
 
     audioPlayer.addEventListener("canplay", e => {
@@ -220,7 +223,7 @@ window.addEventListener("load", e => {
             isWaitingForCanPlay = false
         }
     })
-
+    
     for (let i=0;i<dropdownAudios.children.length;i++) {
         let item = dropdownAudios.children[i]
 
@@ -235,10 +238,40 @@ window.addEventListener("load", e => {
             waitingMode("waiting")
             hls_audio(`/api/${item.dataset.hash}/audio/hls`)
 
+            for (let i2=0;i2<dropdownAudios.children.length;i2++) {
+                dropdownAudios.children[i2].children[0].classList.remove("active")
+            }
+
+            item.children[0].classList.add("active")
+
             while (!isBuffered(videoPlayer, currentTime) || !isBuffered(audioPlayer, currentTime)) {
                 console.log("Esperando Juntar Vídeo/Audio!")
                 await new Promise(resolve => setTimeout(resolve, 100))
             }
+        })
+    }
+
+    for (let i=0;i<dropdownLegendas.children.length;i++) {
+        let item = dropdownLegendas.children[i]
+
+        item.addEventListener("click", e => {
+            dropdownLegendas.parentElement.children[0].innerHTML = item.textContent
+            videoPlayer.replaceChildren()
+            if (item.dataset.hash != "0") {
+                let track = document.createElement("track")
+                track.default = true
+                track.kind = "captions"
+                track.src = `/api/${item.dataset.hash}/legenda`
+                videoPlayer.appendChild(track)
+
+                videoPlayer.textTracks[0].mode = "showing"
+            }
+
+            for (let i2=0;i2<dropdownLegendas.children.length;i2++) {
+                dropdownLegendas.children[i2].children[0].classList.remove("active")
+            }
+
+            item.children[0].classList.add("active")
         })
     }
 })

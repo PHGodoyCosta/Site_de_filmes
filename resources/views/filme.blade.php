@@ -28,26 +28,57 @@
                             @if ($filme->audios[0]->name)
                                 {{ $filme->audios[0]->name }}
                             @else
-                                Áudio {{ 0 }}
+                                Áudio 1
                             @endif
                         </button>
                         <ul class="dropdown-menu" id="dropdown-audios" style="z-index: 3">
                             @for ($i=0;$i<count($filme->audios);$i++)
                                 @php $audio = $filme->audios[$i]; @endphp
                                 @if ($audio->name)
-                                    <li data-hash="{{ $audio->hash }}"><a class="dropdown-item" href="#">{{ $audio->name }}</a></li>
+                                    <li data-hash="{{ $audio->hash }}"><a class="dropdown-item @php if ($i == 0) { echo "active"; } @endphp" href="#">{{ $audio->name }}</a></li>
                                 @else
-                                    <li data-hash="{{ $audio->hash }}"><a class="dropdown-item" href="#">Áudio {{ $i }}</a></li>
+                                    <li data-hash="{{ $audio->hash }}"><a class="dropdown-item @php if ($i == 0) { echo "active"; } @endphp" href="#">Áudio {{ $i + 1 }}</a></li>
                                 @endif
                             @endfor
                         </ul>
                     </div>
                     <div class="dropdown">
-                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Legenda</button>
+                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            @php
+                                $isLegendaWritted = false;
+                                $whoActive = -2;
+
+                                for ($i=0;$i<count($filme->legendas);$i++) {
+                                    $legenda = $filme->legendas[$i];
+
+                                    if ($legenda->isForced) {
+                                        if ($legenda->name) {
+                                            echo $legenda->name;
+                                        } else {
+                                            echo "Legenda " . $i + 1;
+                                        }
+                                        $isLegendaWritted = true;
+                                        $whoActive = $i;
+                                        break;
+                                    }
+                                }
+
+                                if (!$isLegendaWritted) {
+                                    $whoActive = -1;
+                                    echo "Sem Legenda";
+                                }
+                            @endphp
+                        </button>
                         <ul class="dropdown-menu" id="dropdown-legendas">
-                          <li><a class="dropdown-item" href="#">Action</a></li>
-                          <li><a class="dropdown-item" href="#">Another action</a></li>
-                          <li><a class="dropdown-item" href="#">Something else here</a></li>
+                            <li data-hash="0"><a class="dropdown-item @php if ($whoActive == -1) { echo "active"; } @endphp" href="#">Sem Legenda</a></li>
+                            @for ($i=0;$i<count($filme->legendas);$i++)
+                                @php $legenda = $filme->legendas[$i]; @endphp
+                                @if ($legenda->name)
+                                    <li data-hash="{{ $legenda->hash }}"><a class="dropdown-item @php if ($whoActive == $i) { echo "active"; } @endphp" href="#">{{ $legenda->name }}</a></li>
+                                @else
+                                    <li data-hash="{{ $legenda->hash }}"><a class="dropdown-item @php if ($whoActive == $i) { echo "active"; } @endphp" href="#">Legenda {{ $i + 1 }}</a></li>
+                                @endif
+                            @endfor
                         </ul>
                     </div>
                 </div>
@@ -65,6 +96,7 @@
                 <div id="little_pause">
                     <i class="bi bi-play-fill"></i>
                 </div>
+                <p class="mb-1" style="color: white;" id="progress-time-counter">00:00</p>
                 <div id="progress-container" class="flex-grow-1">
                     <div id="progress-bar"></div>
                     <div id="progress-buffer"></div>
@@ -76,14 +108,20 @@
             </div>
         </div>
         <video id="videoPlayer" src="/green-day.mp4" muted>
-            {{-- <track default kind="captions" src="/legenda/legenda.vtt" /> --}}
+            @foreach ($filme->legendas as $legenda)
+                @if ($legenda->isForced)
+                    <track default kind="captions" src="/api/{{ $legenda->hash }}/legenda" />
+                @endif
+            @endforeach
+            {{-- <track default kind="captions" src="/api/547f253e-9a84-41cb-abc9-5d6056bbb478/legenda" /> --}}
+            {{-- <track default kind="captions" src="/legenda/legenda.vtt" style="z-index: 5" /> --}}
         </video>
         <div>
             <audio id="audioPlayer" src="/green-day.mp3" class="d-none"></audio>
         </div>
     </div>
     <script>
-        const videoPlayer = document.getElementById('videoPlayer');
+        //const videoPlayer = document.getElementById('videoPlayer');
         //const videoUrl = '/movie/output.m3u8';
         //const videoUrl = '/audios_hls/output.m3u8'
 
@@ -120,21 +158,8 @@
     </script>
 
     {{-- <script>
-        window.addEventListener("load", e => {
-            const dropdownAudios = document.getElementById("dropdown-audios")
-            const dropdownLegendas = document.getElementById("dropdown-legendas")
+        const videoPlayer = document.getElementById('videoPlayer');
 
-            for (let i=0;i<dropdownAudios.children.length;i++) {
-                let item = dropdownAudios.children[i]
-
-                item.addEventListener("click", e => {
-                    dropdownAudios.parentElement.children[0].innerHTML = item.textContent
-                    console.log(item)
-                    alert(item.dataset.hash)
-                    hls_audio(`/api/${item.dataset.hash}/audio/hls`)
-                })
-            }
-        })
     </script> --}}
 </body>
 </html>
