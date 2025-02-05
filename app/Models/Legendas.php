@@ -5,9 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Filmes;
 
-class Audios extends Model
+class Legendas extends Model
 {
-    protected $table = "audios";
+    protected $table = "legendas";
 
     public function filme() {
         return $this->belongsTo(Filmes::class);

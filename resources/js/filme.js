@@ -1,6 +1,3 @@
-const playButton = document.getElementById('playButton')
-const durationP = document.getElementById("duration")
-const tempoPulado = document.getElementById("tempo-pulado")
 const pause_div = document.querySelector(".pause_icon")
 const allControls = document.getElementById("all-controls")
 const progressContainer = document.querySelector("#progress-container");
@@ -13,15 +10,23 @@ const controls = document.querySelector(".controls")
 const remainingTime = document.getElementById("remaining-time")
 const waiting = document.getElementById("waiting")
 const dropdowns = document.getElementById("dropdowns")
+const dropdownAudios = document.getElementById("dropdown-audios")
+const dropdownLegendas = document.getElementById("dropdown-legendas")
 
 let currentIndex = 0
 let hideTimeout;
 var videoDuration = 0;
 
 function formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
     const remainingSeconds = Math.floor(seconds % 60);
-    return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+
+    if (hours > 0) {
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+    } else {
+        return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+    }
 }
 
 function isBuffered(mediaElement, time) {
@@ -39,10 +44,12 @@ function changePlayStatus(status="") {
     let i_2 = littlePause.children[0]
 
     if (videoPlayer.paused || status == "play") {
+        console.log("PLAY!")
         i.className = "bi bi-pause-fill"
         i_2.className = "bi bi-pause-fill"
         videoPlayer.play()
     } else if (!videoPlayer.paused || status == "pause") {
+        console.log("PAUSE!")
         i.className = "bi bi-play-fill"
         i_2.className = "bi bi-play-fill"
         videoPlayer.pause()
@@ -58,7 +65,7 @@ function waitingMode(mode="waiting") {
     } else if (mode == "play") {
         dropdowns.style.display = "flex"
         waiting.style.display = "none"
-        videoBox.style.backgroundColor = "transparent"
+        //videoBox.style.backgroundColor = "transparent"
         pause_div.children[0].style.display = "block"
     }
 }
@@ -75,15 +82,24 @@ function hideControls() {
     }
 }
 
+function activeFullScreen() {
+    if (document.fullscreenElement !== null) {
+        document.exitFullscreen()
+    } else {
+        videoBox.requestFullscreen()
+    }
+}
+
 videoPlayer.addEventListener('loadedmetadata', () => {
     let duration = videoPlayer.duration; // Duração total em segundos
     videoDuration = formatTime(duration); // Formata a duração total
-    durationP.innerHTML = `Tempo total: ${videoDuration}`;
 });
 
 videoPlayer.addEventListener('seeked', async () => {
     const currentTime = videoPlayer.currentTime;
     audioPlayer.currentTime = currentTime
+
+    audioPlayer.muted = false
 
     videoPlayer.pause();
     audioPlayer.pause();
@@ -98,7 +114,6 @@ videoPlayer.addEventListener('seeked', async () => {
 
     const formattedTime = formatTime(currentTime);
     const formattedDuration = formatTime(videoPlayer.duration);
-    tempoPulado.innerHTML = `Tempo atual: ${formattedTime}`;
 });
 
 videoPlayer.addEventListener('play', () => {
@@ -111,49 +126,41 @@ videoPlayer.addEventListener('pause', () => {
 
 videoPlayer.addEventListener('waiting', () => {
     waitingMode("waiting")
-    console.log("Waiting")
 })
 
-videoPlayer.addEventListener('playing', () => {
-    console.log("Playing")
-})
+// videoPlayer.addEventListener('playing', () => {
+//     console.log("Playing")
+// })
 
 videoPlayer.addEventListener('canplay', () => {
+    remainingTime.innerHTML = formatTime(Math.floor(videoPlayer.duration))
     waitingMode("play")
-    console.log("Can Play!")
 })
 
 videoPlayer.addEventListener("timeupdate", () => {
     if (!videoPlayer.duration || videoPlayer.readyState < 2) return;
 
     const progress = (videoPlayer.currentTime / videoPlayer.duration) * 100;
-
-    // Pegar a última parte carregada (buffer final)
-    let bufferedEnd = 0;
-    if (videoPlayer.buffered.length > 0) {
-        bufferedEnd = videoPlayer.buffered.end(videoPlayer.buffered.length - 1);
-    }
-
-    // Evitar mostrar tempo além do carregado
-    const remainingTimeNumber = Math.max(0, bufferedEnd - videoPlayer.currentTime);
-
-    remainingTime.innerHTML = formatTime(Math.floor(remainingTimeNumber));
     progressBar.style.width = `${progress}%`;
-    // const progress = (videoPlayer.currentTime / videoPlayer.duration) * 100
-    // const remainingTimeNumber = videoPlayer.duration - videoPlayer.currentTime
-    // remainingTime.innerHTML = formatTime(remainingTimeNumber.toFixed(0))
-    // progressBar.style.width = `${progress}%`
-})
+
+    // Atualizar o tempo restante
+    const remainingTimeNumber = videoPlayer.duration - videoPlayer.currentTime;
+    remainingTime.innerHTML = formatTime(Math.floor(remainingTimeNumber));
+});
 
 videoPlayer.addEventListener("progress", () => {
     if (videoPlayer.buffered.length > 0) {
-        const bufferedEnd = videoPlayer.buffered.end(videoPlayer.buffered.length - 1);
-        const bufferedPercent = (bufferedEnd / videoPlayer.duration) * 100;
+        let totalBuffered = 0;
+        for (let i = 0; i < videoPlayer.buffered.length; i++) {
+            totalBuffered += videoPlayer.buffered.end(i) - videoPlayer.buffered.start(i);
+        }
+        const bufferedPercent = (totalBuffered / videoPlayer.duration) * 100;
         progressBuffer.style.width = `${bufferedPercent}%`;
     }
-})
+});
 
 progressContainer.addEventListener("click", (e) => {
+    audioPlayer.muted = true
     const rect = progressContainer.getBoundingClientRect();
     const offsetX = e.clientX - rect.left;
     const percentage = offsetX / rect.width;
@@ -161,23 +168,13 @@ progressContainer.addEventListener("click", (e) => {
     videoPlayer.currentTime = videoPlayer.duration * percentage;
 });
 
-playButton.addEventListener("click", e => {
-    videoPlayer.play()
-    let buffer = isBuffered(videoPlayer)
-})
-
 //pause_div.addEventListener("click", changePlayStatus)
 littlePause.addEventListener("click", changePlayStatus)
 //videoBox.addEventListener("click", changePlayStatus)
 controls.addEventListener("click", changePlayStatus)
+controls.addEventListener("dblclick", activeFullScreen)
 
-fullscreen.addEventListener("click", () => {
-    if (document.fullscreenElement !== null) {
-        document.exitFullscreen()
-    } else {
-        videoBox.requestFullscreen()
-    }
-})
+fullscreen.addEventListener("click", activeFullScreen)
 
 document.addEventListener("mousemove", showControls);
 
@@ -208,3 +205,40 @@ document.getElementById('fullscreen').addEventListener('click', function () {
         }
     }
 });
+
+window.addEventListener("load", e => {
+    let isWaitingForCanPlay = false
+
+    audioPlayer.addEventListener("canplay", e => {
+        if (isWaitingForCanPlay) {
+            audioPlayer.currentTime = videoPlayer.currentTime
+            waitingMode("play")
+            if (videoPlayer.paused) {
+                changePlayStatus("play")
+            }
+
+            isWaitingForCanPlay = false
+        }
+    })
+
+    for (let i=0;i<dropdownAudios.children.length;i++) {
+        let item = dropdownAudios.children[i]
+
+        item.addEventListener("click", async () => {
+            const currentTime = videoPlayer.currentTime;
+            dropdownAudios.parentElement.children[0].innerHTML = item.textContent
+            if (!videoPlayer.paused) {
+                console.log("TROCOU AUDIO COM VÍDEO LIGADO")
+                changePlayStatus("pause")
+            }
+            isWaitingForCanPlay = true
+            waitingMode("waiting")
+            hls_audio(`/api/${item.dataset.hash}/audio/hls`)
+
+            while (!isBuffered(videoPlayer, currentTime) || !isBuffered(audioPlayer, currentTime)) {
+                console.log("Esperando Juntar Vídeo/Audio!")
+                await new Promise(resolve => setTimeout(resolve, 100))
+            }
+        })
+    }
+})

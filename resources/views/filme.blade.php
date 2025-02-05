@@ -15,128 +15,126 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
-    <h1 class="mt-2 text-center">Assita agora: {{ $filme->name }}</h1>
-    <div class="d-flex w-100 justify-content-center mb-2 mt-2" style="position: relative">
-        <div id="video-box">
-            <div id="all-controls">
-                <div class="w-100 position-absolute pt-2 px-2 d-flex justify-content-between align-items-center" style="z-index: 3">
-                    <a href="/" id="back">
-                        <i class="bi bi-arrow-left"></i>
-                    </a>
-                    <div class="gap-3" id="dropdowns" style="display: flex">
-                        <div class="dropdown">
-                            <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                @if ($filme->audios[0]->name)
-                                    {{ $filme->audios[0]->name }}
+    {{-- <h1 class="mt-2 text-center">Assita agora: {{ $filme->name }}</h1> --}}
+    <div id="video-box">
+        <div id="all-controls">
+            <div class="w-100 position-absolute pt-2 px-3 d-flex justify-content-between align-items-center" style="z-index: 3">
+                <a href="/" id="back">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div class="gap-3" id="dropdowns" style="display: flex">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            @if ($filme->audios[0]->name)
+                                {{ $filme->audios[0]->name }}
+                            @else
+                                Áudio {{ 0 }}
+                            @endif
+                        </button>
+                        <ul class="dropdown-menu" id="dropdown-audios" style="z-index: 3">
+                            @for ($i=0;$i<count($filme->audios);$i++)
+                                @php $audio = $filme->audios[$i]; @endphp
+                                @if ($audio->name)
+                                    <li data-hash="{{ $audio->hash }}"><a class="dropdown-item" href="#">{{ $audio->name }}</a></li>
                                 @else
-                                    Áudio {{ 0 }}
+                                    <li data-hash="{{ $audio->hash }}"><a class="dropdown-item" href="#">Áudio {{ $i }}</a></li>
                                 @endif
-                            </button>
-                            <ul class="dropdown-menu" id="dropdown-audios" style="z-index: 3">
-                                @for ($i=0;$i<count($filme->audios);$i++)
-                                    @php $audio = $filme->audios[$i]; @endphp
-                                    @if ($audio->name)
-                                        <li><a class="dropdown-item" href="#">{{ $audio->name }}</a></li>
-                                    @else
-                                        <li><a class="dropdown-item" href="#">Áudio {{ $i }}</a></li>
-                                    @endif
-                                @endfor
-                            </ul>
-                        </div>
-                        <div class="dropdown">
-                            <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Legenda</button>
-                            <ul class="dropdown-menu" id="dropdown-legendas">
-                              <li><a class="dropdown-item" href="#">Action</a></li>
-                              <li><a class="dropdown-item" href="#">Another action</a></li>
-                              <li><a class="dropdown-item" href="#">Something else here</a></li>
-                            </ul>
-                        </div>
+                            @endfor
+                        </ul>
                     </div>
-                </div>
-                <div class="controls">
-                    <div class="pause_icon" style="cursor: pointer">
-                        <i style="display: none" class="bi bi-play-fill"></i>
-                        <div class="flex-column align-items-center" style="z-index: 1" id="waiting">
-                            <img style="border-radius: 10px;width: 30vw" src="/loading.gif" alt="Loading do vídeo">
-                            <p style="color: white" class="text-center fw-bold fs-2">Carregando...</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="w-100 position-absolute d-flex align-items-center gap-3 px-2" style="bottom: 0">
-                    <div id="little_pause">
-                        <i class="bi bi-play-fill"></i>
-                    </div>
-                    <div id="progress-container" class="flex-grow-1">
-                        <div id="progress-bar"></div>
-                        <div id="progress-buffer"></div>
-                    </div>
-                    <p class="mb-1" style="color: white;" id="remaining-time">00:00</p>
-                    <div id="fullscreen">
-                        <i class="bi bi-fullscreen"></i>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Legenda</button>
+                        <ul class="dropdown-menu" id="dropdown-legendas">
+                          <li><a class="dropdown-item" href="#">Action</a></li>
+                          <li><a class="dropdown-item" href="#">Another action</a></li>
+                          <li><a class="dropdown-item" href="#">Something else here</a></li>
+                        </ul>
                     </div>
                 </div>
             </div>
-            <video id="videoPlayer" src="/green-day.mp4" muted>
-                {{-- <track default kind="captions" src="/legenda/legenda.vtt" /> --}}
-            </video>
+            <div class="controls">
+                <div class="pause_icon" style="cursor: pointer">
+                    <i style="display: none" class="bi bi-play-fill"></i>
+                    <div class="flex-column align-items-center" style="z-index: 1" id="waiting">
+                        <img style="border-radius: 10px;width: 30vw" src="/loading.gif" alt="Loading do vídeo">
+                        <p style="color: white" class="text-center fw-bold fs-2">Carregando...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="w-100 position-absolute d-flex align-items-center gap-3 px-3 pb-1" style="bottom: 0">
+                <div id="little_pause">
+                    <i class="bi bi-play-fill"></i>
+                </div>
+                <div id="progress-container" class="flex-grow-1">
+                    <div id="progress-bar"></div>
+                    <div id="progress-buffer"></div>
+                </div>
+                <p class="mb-1" style="color: white;" id="remaining-time">00:00</p>
+                <div id="fullscreen">
+                    <i class="bi bi-fullscreen"></i>
+                </div>
+            </div>
+        </div>
+        <video id="videoPlayer" src="/green-day.mp4" muted>
+            {{-- <track default kind="captions" src="/legenda/legenda.vtt" /> --}}
+        </video>
+        <div>
+            <audio id="audioPlayer" src="/green-day.mp3" class="d-none"></audio>
         </div>
     </div>
-    <div>
-        <audio id="audioPlayer" src="/green-day.mp3" controls></audio>
-    </div>
-    <div class="dropdown">
-        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Idioma</button>
-        <ul class="dropdown-menu" style="z-index: 3">
-          <li><a class="dropdown-item" href="#">Action</a></li>
-          <li><a class="dropdown-item" href="#">Another action</a></li>
-          <li><a class="dropdown-item" href="#">Something else here</a></li>
-        </ul>
-    </div>
-    <button id="playButton">Play</button>
-    <p id="duration">asdasdasd</p>
-    <p id="tempo-pulado">tempo pulado</p>
-
-    <script>
-        const dropdownAudios = document.getElementById("dropdown-audios")
-        const dropdownLegendas = document.getElementById("dropdown-legendas")
-
-        for (let i=0;i<dropdownAudios.children.length;i++) {
-            let item = dropdownAudios.children[i]
-
-            item.addEventListener("click", e => {
-                dropdownAudios.parentElement.children[0].innerHTML = item.textContent
-            })
-        }
-    </script>
-
     <script>
         const videoPlayer = document.getElementById('videoPlayer');
         //const videoUrl = '/movie/output.m3u8';
-        const videoUrl = '/api/{{ $filme->hash }}/video/hls'
         //const videoUrl = '/audios_hls/output.m3u8'
 
-        if (Hls.isSupported()) {
-            const hls = new Hls();
-            hls.loadSource(videoUrl);
-            hls.attachMedia(videoPlayer);
-        } else if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
-            videoPlayer.src = videoUrl;
+        function hls_video(videoUrl) {
+            if (Hls.isSupported()) {
+                const hls = new Hls();
+                hls.loadSource(videoUrl);
+                hls.attachMedia(videoPlayer);
+            } else if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                videoPlayer.src = videoUrl;
+            }
         }
+
+        hls_video('/api/{{ $filme->hash }}/video/hls')
     </script>
 
     <script>
         const audioPlayer = document.getElementById('audioPlayer');
         //const audioUrl = '/audios_hls2/output.m3u8'; // URL da playlist HLS
-        const audioUrl = '/api/{{ $filme->audios[0]->hash }}/audio/hls'
 
-        if (Hls.isSupported()) {
-            const hls = new Hls();
-            hls.loadSource(audioUrl);
-            hls.attachMedia(audioPlayer);
-        } else if (audioPlayer.canPlayType('application/vnd.apple.mpegurl')) {
-        // Fallback para navegadores que suportam HLS nativamente (Safari)
-            audioPlayer.src = audioUrl;
+        function hls_audio(audioUrl) {
+            if (Hls.isSupported()) {
+                const hls = new Hls();
+                hls.loadSource(audioUrl);
+                hls.attachMedia(audioPlayer);
+            } else if (audioPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                audioPlayer.src = audioUrl;
+            }
+
+            audioPlayer.currentTime = videoPlayer.currentTime
         }
+
+        hls_audio('/api/{{ $filme->audios[0]->hash }}/audio/hls')
     </script>
+
+    {{-- <script>
+        window.addEventListener("load", e => {
+            const dropdownAudios = document.getElementById("dropdown-audios")
+            const dropdownLegendas = document.getElementById("dropdown-legendas")
+
+            for (let i=0;i<dropdownAudios.children.length;i++) {
+                let item = dropdownAudios.children[i]
+
+                item.addEventListener("click", e => {
+                    dropdownAudios.parentElement.children[0].innerHTML = item.textContent
+                    console.log(item)
+                    alert(item.dataset.hash)
+                    hls_audio(`/api/${item.dataset.hash}/audio/hls`)
+                })
+            }
+        })
+    </script> --}}
 </body>
 </html>
